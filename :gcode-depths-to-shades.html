@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+/*
+	.example {
+	  padding: 10px;
+	  border: 1px solid #ccc;
+	}
+*/
+	html,
+	body {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	#drop_zone {
+		border: 2px dashed #bbb;
+		-moz-border-radius: 5px;
+		-webkit-border-radius: 5px;
+		border-radius: 5px;
+		height:100%;
+	}
+
+	#drop_zone > p {
+		padding: 25px;
+		color: red;
+		text-align: center;
+		font: bold 24pt Arial, Helvetica, sans-serif;
+		}
+
+</style>
+</head>
+<body>
+<!--
+	<table>
+	    <tr>
+	        <td>Filename to Save As:</td>
+	        <td><input id="inputFileNameToSaveAs"></input></td>
+	    </tr>
+	</table>
+-->
+
+	<div id="drop_zone">
+		<p>Drag & Drop your file(s) here</p>
+		<output id="list"></output>
+	</div>
+
+</body>
+
+<script>
+
+	function destroyClickedElement(event)
+	{
+	    document.body.removeChild(event.target);
+	}
+
+
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    var files = evt.dataTransfer.files; // FileList object.
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0, f; file = files[i]; i++) {
+		output.push('<li><strong>', escape(file.name), '</strong> (', file.type || 'n/a', ') - ',
+			file.size, ' bytes, last modified: ',
+			file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() : 'n/a',
+			'</li>');
+
+		var fileToLoad = file;
+	    var fileReader = new FileReader();
+	    fileReader.onload = function(fileLoadedEvent)
+	    {
+	        var textFromFileLoaded = fileLoadedEvent.target.result;
+
+	        // Regular Expression
+	        textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
+	        textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
+	        textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P0.10  ; Dwell 0.10 seconds\nM3 S1  ; Laser OFF");  // Laser Off
+
+	// 		textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255  ; Laser ON\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On
+			textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1  ; Laser On @ Power Level: $1\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On @ Power Level
+
+			console.log(textFromFileLoaded + fileToLoad.name);
+
+			// Trigger File Download
+			var textToSave = textFromFileLoaded;
+			var textToSaveAsBlob = new Blob([textFromFileLoaded], {type:"text/plain"});
+			var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+			var fileNameToSaveAs = fileToLoad.name;
+
+			var downloadLink = document.createElement("a");
+			downloadLink.download = fileNameToSaveAs;
+			downloadLink.innerHTML = "Download File";
+			downloadLink.href = textToSaveAsURL;
+			downloadLink.onclick = destroyClickedElement;
+			downloadLink.style.display = "none";
+			document.body.appendChild(downloadLink);
+
+			downloadLink.click();
+	    };
+	    fileReader.readAsText(fileToLoad, "UTF-8");
+
+    }
+    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  // Setup the dnd listeners.
+  var dropZone = document.getElementById('drop_zone');
+  dropZone.addEventListener('dragover', handleDragOver, false);
+  dropZone.addEventListener('drop', handleFileSelect, false);
+</script>
+</html>

@@ -25,7 +25,7 @@
 
 	#drop_zone > p {
 		padding: 25px;
-		color: red;
+		color: #0d6ae3;
 		text-align: center;
 		font: bold 24pt Arial, Helvetica, sans-serif;
 		}
@@ -65,33 +65,37 @@
 
     // files is a FileList of File objects. List some properties.
     var output = [];
-    for (var i = 0, f; file = files[i]; i++) {
+    for (var i = 0, file; file = files[i]; i++) {
 		output.push('<li><strong>', escape(file.name), '</strong> (', file.type || 'n/a', ') - ',
 			file.size, ' bytes, last modified: ',
 			file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() : 'n/a',
 			'</li>');
 
-		var fileToLoad = file;
-	    var fileReader = new FileReader();
-	    fileReader.onload = function(fileLoadedEvent)
-	    {
-	        var textFromFileLoaded = fileLoadedEvent.target.result;
 
-	        // Regular Expression
-	        textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
-	        textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
-	        textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P0.10  ; Dwell 0.10 seconds\nM3 S1  ; Laser OFF");  // Laser Off
+		// File Reader Object
+		var fileReader = new FileReader();
 
-	// 		textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255  ; Laser ON\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On
+		// Closure to capture the file information.
+		fileReader.onload = (function(thisFile) {
+		return function(fileLoadedEvent) {
+			// Pass Textt to Varable
+			var textFromFileLoaded = fileLoadedEvent.target.result;
+
+			// Regular Expression
+		    textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
+		    textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
+		    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P0.10  ; Dwell 0.10 seconds\nM3 S1  ; Laser OFF");  // Laser Off
+		// 		textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255  ; Laser ON\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On
 			textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1  ; Laser On @ Power Level: $1\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On @ Power Level
 
-			console.log(textFromFileLoaded + fileToLoad.name);
+			// Debug Ouput
+			console.log("File: " + thisFile.name + "\n- - - - - - - - - - - -\n" + textFromFileLoaded + "\n=======================");
 
 			// Trigger File Download
 			var textToSave = textFromFileLoaded;
 			var textToSaveAsBlob = new Blob([textFromFileLoaded], {type:"text/plain"});
 			var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
-			var fileNameToSaveAs = "LASER_" + fileToLoad.name;
+			var fileNameToSaveAs = "LASER_" + thisFile.name;
 
 			var downloadLink = document.createElement("a");
 			downloadLink.download = fileNameToSaveAs;
@@ -102,8 +106,11 @@
 			document.body.appendChild(downloadLink);
 
 			downloadLink.click();
-	    };
-	    fileReader.readAsText(fileToLoad, "UTF-8");
+		};
+		})(file);
+
+		// Read File
+		fileReader.readAsText(file, "UTF-8");
 
     }
     document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';

@@ -16,7 +16,6 @@ Based on:
 	<title>G-Code Depth to Shades</title>
 	<meta charset="utf-8">
 	<meta content="width=device-width, initial-scale=1" name="viewport">
-
 	<style>
 		*, *:after, *:before {
 			box-sizing: border-box
@@ -96,7 +95,6 @@ Based on:
 			color: #7d868c
 		}
 	</style>
-
 </head>
 <body id="filedrag">
 	<main>
@@ -119,11 +117,6 @@ Based on:
 		</footer>
 	</main>
 <script>
-	/*
-	filedrag.js - HTML5 File Drag & Drop demonstration
-	Featured on SitePoint.com
-	Developed by Craig Buckler (@craigbuckler) of OptimalWorks.net
-	*/
 	(function() {
 
 		// getElementById
@@ -258,49 +251,3 @@ Based on:
 </script>
 </body>
 </html>
-
-
-
-
-
-<!--
-		// File Reader Object
-		var fileReader = new FileReader();
-
-		// Closure to capture the file information.
-		fileReader.onload = (function(thisFile) {
-		return function(fileLoadedEvent) {
-			// Pass Textt to Varable
-			var textFromFileLoaded = fileLoadedEvent.target.result;
-
-			// Regular Expression
-		    textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
-		    textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
-		    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P0.10  ; Dwell 0.10 seconds\nM3 S1  ; Laser OFF");  // Laser Off
-		// 		textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255  ; Laser ON\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On
-			textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1  ; Laser On @ Power Level: $1\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On @ Power Level
-
-			// Debug Ouput
-			console.log("File: " + thisFile.name + "\n- - - - - - - - - - - -\n" + textFromFileLoaded + "\n=======================");
-
-			// Trigger File Download
-			var textToSave = textFromFileLoaded;
-			var textToSaveAsBlob = new Blob([textFromFileLoaded], {type:"text/plain"});
-			var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
-			var fileNameToSaveAs = "LASER_" + thisFile.name;
-
-			var downloadLink = document.createElement("a");
-			downloadLink.download = fileNameToSaveAs;
-			downloadLink.innerHTML = "Download File";
-			downloadLink.href = textToSaveAsURL;
-			downloadLink.onclick = destroyClickedElement;
-			downloadLink.style.display = "none";
-			document.body.appendChild(downloadLink);
-
-			downloadLink.click();
-		};
-		})(file);
-
-		// Read File
-		fileReader.readAsText(file, "UTF-8");
--->

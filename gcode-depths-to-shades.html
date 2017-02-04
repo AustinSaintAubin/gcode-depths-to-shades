@@ -58,7 +58,7 @@ Based on:
 			right: -38px;
 			font-size: 11px;
 			color: #bbb;
-			content: 'BETA v1.1'
+			content: 'BETA v1.2'
 		}
 		.logo img {
 			margin: 0;
@@ -104,8 +104,20 @@ Based on:
 		<section>
 			<h1>Configuration Options</h1>
 			<form method="" accept-charset="utf-8">
-				<label for="laser_power_variable">Variable Laser Power: </label>
-				<input id="laser_power_variable" name="laser_power_variable" type="checkbox"/>
+				<ul style="list-style-type:disc">
+					<li><label for="remove_m7-m8-m9">Remove: M7,M8,M9</label><input id="remove_m7-m8-m9" name="remove_m7-m8-m9" type="checkbox" checked /></li>
+					<li>
+						<label for="laser_power">Laser Power:</label>
+						<select name="laser_power">
+							<option value="constant">Constant</option>
+							<option value="variable">Variable</option>
+						</select>
+					</li>
+					<li>
+						<label for="destination_filename_prefex">Converted Filename Prefex:</label>
+						<input type="text" name="destination_filename_prefex" value="LASER_">
+					</li>
+				</ul>
 			</form>
 		</section>
 		<section>
@@ -193,16 +205,21 @@ Based on:
 				console.log("\n- - - - - - - - - - - -\n" + "File: " + file.name);
 
 				// Regular Expression
-			    textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
-			    textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
+				textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
 			    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P0.10  ; Dwell 0.10 seconds\nM3 S1  ; Laser OFF");  // Laser Off
 
+				// Remove Watercooling Refences
+				if (document.getElementById('remove_m7-m8-m9').checked) {
+					console.log("Regex: Remove Watercooling Refences");
+					textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
+				}
+
 				// Laser Off/On | Off/Range
-				if (document.getElementById('laser_power_variable').checked) {
-					console.log("Laser On @ Varible Power Level");
+				if (document.getElementsByName('laser_power')[0].value == 'variable' ) {
+					console.log("Regex: Laser On @ Varible Power Level");
 					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1  ; Laser On @ Power Level: $1\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On @ Power Level
 				} else {
-					console.log("Laser On @ Constant Power Level");
+					console.log("Regex: Laser On @ Constant Power Level");
 					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255  ; Laser ON\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On
 				}
 
@@ -210,7 +227,7 @@ Based on:
 				var textToSave = textFromFileLoaded;
 				var textToSaveAsBlob = new Blob([textFromFileLoaded], {type:"text/plain"});
 				var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
-				var fileNameToSaveAs = "LASER_" + file.name;
+				var fileNameToSaveAs = document.getElementsByName('destination_filename_prefex')[0].value + file.name;
 
 				var downloadLink = document.createElement("a");
 				downloadLink.download = fileNameToSaveAs;
@@ -249,7 +266,7 @@ Based on:
 				filedrag.style.display = "block";
 
 				// remove submit button
-				submitbutton.style.display = "none";
+				//submitbutton.style.display = "none";
 			}
 		}
 

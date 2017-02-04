@@ -114,6 +114,10 @@ Based on:
 						</select>
 					</li>
 					<li>
+						<label for="laser_power_constant">Laser Power(if constant):</label>
+						<input type="number" name="laser_power_constant" value="255">
+					</li>
+					<li>
 						<label for="laser_on_dwell_duration">POST Laser ON Dwell Duration(seconds):</label>
 						<input type="number" name="laser_on_dwell_duration" value="0.25">
 					</li>
@@ -234,8 +238,9 @@ Based on:
 					console.log("Regex: Laser On @ Varible Power Level");
 					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1; Laser On @ Power Level: $1\nG4 P" + laserOnDwellDuration + "; Dwell " + laserOnDwellDuration + " seconds");  // Laser On @ Power Level
 				} else {
-					console.log("Regex: Laser On @ Constant Power Level");
-					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255; Laser ON\nG4 P" + laserOnDwellDuration + "; Dwell " + laserOnDwellDuration + " seconds");  // Laser On
+					var laserPowerConstant = document.getElementsByName('laser_power_constant')[0].value
+					console.log("Regex: Laser On @ Constant Power Level: " + laserPowerConstant);
+					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S" + laserPowerConstant + "; Laser ON\nG4 P" + laserOnDwellDuration + "; Dwell " + laserOnDwellDuration + " seconds");  // Laser On
 				}
 
 				// Trigger File Download

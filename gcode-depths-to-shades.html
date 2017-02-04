@@ -114,6 +114,14 @@ Based on:
 						</select>
 					</li>
 					<li>
+						<label for="laser_on_dwell_duration">POST Laser ON Dwell Duration(seconds):</label>
+						<input type="number" name="laser_on_dwell_duration" value="0.25">
+					</li>
+					<li>
+						<label for="laser_off_dwell_duration">PRE Laser OFF Dwell Duration(seconds):</label>
+						<input type="number" name="laser_off_dwell_duration" value="0.1">
+					</li>
+					<li>
 						<label for="destination_filename_prefex">Converted Filename Prefex:</label>
 						<input type="text" name="destination_filename_prefex" value="LASER_">
 					</li>
@@ -204,9 +212,16 @@ Based on:
  				//console.log("File: " + file.name + "\n- - - - - - - - - - - -\n" + textFromFileLoaded + "\n=======================");
 				console.log("\n- - - - - - - - - - - -\n" + "File: " + file.name);
 
+				// Dwell Values
+				var laserOnDwellDuration  = document.getElementsByName('laser_on_dwell_duration')[0].value;
+				var laserOffDwellDuration = document.getElementsByName('laser_off_dwell_duration')[0].value;
+				console.log("POST Laser ON Dwell Duration(seconds): " + laserOnDwellDuration);
+				console.log("PRE Laser OFF Dwell Duration(seconds): " + laserOffDwellDuration);
+
+
 				// Regular Expression
 				textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
-			    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P0.10  ; Dwell 0.10 seconds\nM3 S1  ; Laser OFF");  // Laser Off
+			    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P" + laserOffDwellDuration + "; Dwell " + laserOffDwellDuration + " seconds\nM3 S1; Laser OFF");  // Laser Off
 
 				// Remove Watercooling Refences
 				if (document.getElementById('remove_m7-m8-m9').checked) {
@@ -217,10 +232,10 @@ Based on:
 				// Laser Off/On | Off/Range
 				if (document.getElementsByName('laser_power')[0].value == 'variable' ) {
 					console.log("Regex: Laser On @ Varible Power Level");
-					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1  ; Laser On @ Power Level: $1\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On @ Power Level
+					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1; Laser On @ Power Level: $1\nG4 P" + laserOnDwellDuration + "; Dwell " + laserOnDwellDuration + " seconds");  // Laser On @ Power Level
 				} else {
 					console.log("Regex: Laser On @ Constant Power Level");
-					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255  ; Laser ON\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On
+					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255; Laser ON\nG4 P" + laserOnDwellDuration + "; Dwell " + laserOnDwellDuration + " seconds");  // Laser On
 				}
 
 				// Trigger File Download

@@ -1,77 +1,269 @@
 <!DOCTYPE html>
-<html>
+<!--
+G-Code Depth to Shades
+Developed by Austin St. Aubin (@AustinStAubin)
+Based on:
+ - [filedrag.js - HTML5 File Drag & Drop demonstration by Craig Buckler (@craigbuckler) of OptimalWorks.net] (https://www.sitepoint.com/html5-file-drag-and-drop/)
+ - [instant.io](https://github.com/feross/instant.io)
+ - [Loading, Editing, and Saving a Text File in HTML5 Using Javascript](https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/)
+ Also Used:
+ - https://css-tricks.com/using-svg/
+ - http://petercollingridge.appspot.com/svg-optimiser/
+ - https://www.base64encode.org/
+-->
+<html lang="en">
 <head>
-<style>
-/*
-	.example {
-	  padding: 10px;
-	  border: 1px solid #ccc;
-	}
-*/
-	html,
-	body {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
+	<title>G-Code Depth to Shades</title>
+	<meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1" name="viewport">
 
-	#drop_zone {
-		border: 2px dashed #bbb;
-		-moz-border-radius: 5px;
-		-webkit-border-radius: 5px;
-		border-radius: 5px;
-		height:100%;
-	}
+	<style>
+		*, *:after, *:before {
+			box-sizing: border-box
+		}
+		html, body {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+			overflow: auto;
+			font-family: sans-serif
+		}
+		#filedrag.hover::before {
+			content: '';
+			position: fixed;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			background: rgba(39, 186, 248, 0.3);
+			border: 5px rgba(39, 186, 248, 1) dashed;
+			margin: 5px;
+		}
+		main {
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px 20px 0
+		}
+		section {
+			margin: 50px 0
+		}
+		.logo {
+			display: inline-block;
+			position: relative;
+			margin-bottom: 10px
+		}
+		.logo:after {
+			display: inline-block;
+			position: absolute;
+			top: 22px;
+			right: -38px;
+			font-size: 11px;
+			color: #bbb;
+			content: 'BETA v1.1'
+		}
+		.logo img {
+			margin: 0;
+			height: 120px
+		}
+		.subtitle {
+			margin-top: 0;
+			margin-bottom: 20px;
+			color: #7d868c
+		}
+		a:link, a:visited {
+			color: #f8283b;
+			text-decoration: none
+		}
+		a:hover, a:focus, a:active {
+			text-decoration: underline
+		}
+		label {
+			margin-right: 10px
+		}
+		input, button {
+			font-size: 16px
+		}
+		.log {
+			font-family: monospace;
+			font-size: 14px
+		}
+		.log p {
+			margin: 0
+		}
+		footer {
+			margin: 30px 0;
+			font-size: .8em;
+			color: #7d868c
+		}
+	</style>
 
-	#drop_zone > p {
-		padding: 25px;
-		color: #0d6ae3;
-		text-align: center;
-		font: bold 24pt Arial, Helvetica, sans-serif;
+</head>
+<body id="filedrag">
+	<main>
+		<picture class="logo"><source srcset="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzOTYiIGhlaWdodD0iMzk2IiB2aWV3Qm94PSIwIDAgMzk2IDM5NiI+PHN0eWxlPi5he2ZpbGw6IzQ1NUE2NDt9LmJ7ZmlsbDojMjE5NkYzO30uY3tmaWxsOiM5MEE0QUU7fS5ke2ZpbGw6IzE1NjVDMDt9LmV7ZmlsbDojMEQ0N0ExO30uZntmaWxsOm5vbmU7c3Ryb2tlLXdpZHRoOjQuMTtzdHJva2U6I0ZFMDAwMDt9PC9zdHlsZT48c3dpdGNoPjxmb3JlaWduT2JqZWN0IHJlcXVpcmVkRXh0ZW5zaW9ucz0iaHR0cDovL25zLmFkb2JlLmNvbS9BZG9iZUlsbHVzdHJhdG9yLzEwLjAvIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIi8+PGc+PGc+PHJlY3QgeD0iMTA3IiB5PSIxMDciIHdpZHRoPSIxOTgiIGhlaWdodD0iMTciIGZpbGw9IiNCMEJFQzUiLz48cGF0aCBkPSJNMzQ3IDM0N2MwIDUtNCA4LTggOGgtMjY0Yy01IDAtOC00LTgtOGwyNS0xMDdjMC01IDQtOCA4LThoMjE1YzUgMCA4IDQgOCA4TDM0NyAzNDd6IiBjbGFzcz0iYSIvPjxyZWN0IHg9IjY2IiB5PSIzMTQiIHdpZHRoPSIyODEiIGhlaWdodD0iMzMiIGNsYXNzPSJhIi8+PHBhdGggZD0iTTIwNiA4M2MwIDAgMC00MS01OC00MSAtMzMgMC04MiA4LTgyIDc0QzY2IDE5OCA5OSAyMzEgOTkgMjMxIiBzdHlsZT0iZmlsbDpub25lO3N0cm9rZS13aWR0aDoxNztzdHJva2U6IzQ1NUE2NCIvPjxyZWN0IHg9IjE5OCIgeT0iMTQ5IiB3aWR0aD0iMTciIGhlaWdodD0iMzMiIGNsYXNzPSJhIi8+PHBhdGggZD0iTTM0NyAzMTRjMCA1LTQgOC04IDhoLTI2NGMtNSAwLTgtNC04LThsMjUtMTA3YzAtNSA0LTggOC04aDIxNWM1IDAgOCA0IDggOEwzNDcgMzE0eiIgY2xhc3M9ImIiLz48cG9seWdvbiBwb2ludHM9IjI5NyAyOTcgMTE2IDI5NyAxNDAgMTk4IDI3MiAxOTggIiBmaWxsPSIjQ0ZEOERDIi8+PHBvbHlnb24gcG9pbnRzPSIyMzEgMjk3IDI0OCAyOTcgMjM5IDE5OCAyMjMgMTk4ICIgY2xhc3M9ImMiLz48cG9seWdvbiBwb2ludHM9IjE4MiAyOTcgMTY1IDI5NyAxNzMgMTk4IDE5MCAxOTggIiBjbGFzcz0iYyIvPjxwb2x5Z29uIHBvaW50cz0iOTkgMjk3IDgzIDI5NyAxMDcgMTk4IDEyNCAxOTggIiBjbGFzcz0iZCIvPjxwb2x5Z29uIHBvaW50cz0iMzE0IDI5NyAzMzAgMjk3IDMwNSAxOTggMjg5IDE5OCAiIGNsYXNzPSJkIi8+PHBhdGggZD0iTTExNiA3NEg5OVYyMzFjMCA1IDQgOCA4IDhzOC00IDgtOFY3NHoiIGNsYXNzPSJlIi8+PHBhdGggZD0iTTMxNCA3NEgyOTdWMjMxYzAgNSA0IDggOCA4czgtNCA4LThWNzR6IiBjbGFzcz0iZSIvPjxwYXRoIGQ9Ik0yMzEgMTU3YzAgNS00IDgtOCA4aC0zM2MtNSAwLTgtNC04LTh2LTc0YzAtNSA0LTggOC04aDMzYzUgMCA4IDQgOCA4VjE1N3oiIGNsYXNzPSJiIi8+PHBhdGggZD0iTTIyMyAzMzhjMCA5LTcgMTctMTYgMTcgLTkgMC0xNi03LTE2LTE2czctMTYgMTctMTZDMjE1IDMyMiAyMjMgMzI5IDIyMyAzMzgiIGZpbGw9IiMyNjMyMzgiLz48L2c+PGc+PGxpbmUgeDE9IjIwNiIgeTE9IjE4MiIgeDI9IjIwNiIgeTI9IjI1NSIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2Utd2lkdGg6OC4zO3N0cm9rZTojRkUwMDAwIi8+PGc+PGNpcmNsZSBjeD0iMjA2IiBjeT0iMjU1IiByPSI4IiBmaWxsPSIjRkUwMDAwIi8+PGxpbmUgeDE9IjE5MCIgeTE9IjI3MiIgeDI9IjIyMyIgeTI9IjIzOCIgY2xhc3M9ImYiLz48bGluZSB4MT0iMjA2IiB5MT0iMjc5IiB4Mj0iMjA2IiB5Mj0iMjMxIiBjbGFzcz0iZiIvPjxsaW5lIHgxPSIyMzAiIHkxPSIyNTUiIHgyPSIxODMiIHkyPSIyNTUiIGNsYXNzPSJmIi8+PGxpbmUgeDE9IjIyMyIgeTE9IjI3MSIgeDI9IjE5MCIgeTI9IjIzOSIgY2xhc3M9ImYiLz48Zz48bGluZSB4MT0iMjAwIiB5MT0iMjcxIiB4Mj0iMjEyIiB5Mj0iMjQxIiBjbGFzcz0iZiIvPjxsaW5lIHgxPSIyMTIiIHkxPSIyNzEiIHgyPSIyMDAiIHkyPSIyNDEiIGNsYXNzPSJmIi8+PGxpbmUgeDE9IjIyMSIgeTE9IjI1MCIgeDI9IjE5MSIgeTI9IjI2MiIgY2xhc3M9ImYiLz48bGluZSB4MT0iMjIxIiB5MT0iMjYyIiB4Mj0iMTkxIiB5Mj0iMjUwIiBjbGFzcz0iZiIvPjwvZz48L2c+PC9nPjwvZz48L3N3aXRjaD48L3N2Zz4="><img alt="gcode-depths-to-shades" src="/cnc-machine-laser.png"></picture>
+		<p class="subtitle">G-Code Depth to Shades</p>
+		<p><small>Convert 3-Axis CNC Router G-code generated from applications such as <a href="https://www.inventables.com/technologies/easel" target="_blank">Inventables Easel</a>, and turn it into G-code suitable for 2-Axis CNC Laser Engraving.</small></p>
+		<section>
+			<h1>Configuration Options</h1>
+			<p>(coming soon)</p>
+		</section>
+		<section>
+			<h1>Start converting</h1>
+			<p>Drag-and-drop files to convert. Or choose a file: <input id="fileselect" multiple="multiple" name="fileselect[]" type="file"></p>
+			<p>Once you select your files for conversion, the converted files will automatically be downloaded.</p>
+		</section>
+		<h1 id="logHeading" style="display: none;">Log</h1>
+		<div class="log" id="messages"></div>
+		<footer>
+			<p><small>Works in Chrome, Firefox, and Opera. Source code available on <a href="https://github.com/AustinSaintAubin/gcode-depths-to-shades" target="_blank">GitHub</a>, 100% open source, free software. © 2017 AustinSaintAubin.</small></p>
+		</footer>
+	</main>
+<script>
+	/*
+	filedrag.js - HTML5 File Drag & Drop demonstration
+	Featured on SitePoint.com
+	Developed by Craig Buckler (@craigbuckler) of OptimalWorks.net
+	*/
+	(function() {
+
+		// getElementById
+		function $id(id) {
+			return document.getElementById(id);
 		}
 
-</style>
-</head>
-<body>
-<!--
-	<table>
-	    <tr>
-	        <td>Filename to Save As:</td>
-	        <td><input id="inputFileNameToSaveAs"></input></td>
-	    </tr>
-	</table>
--->
+		// output information
+		function Output(msg) {
 
-	<div id="drop_zone">
-		<p>Drag & Drop your file(s) here</p>
-		<output id="list"></output>
-	</div>
+			// Display Log Header
+			var logHeading = document.querySelector('#logHeading')
+			logHeading.style.display = 'block'
 
+			// Post Meaages to Log
+			var m = $id("messages");
+			m.innerHTML = msg + m.innerHTML;
+		}
+
+		// file drag hover
+		function FileDragHover(e) {
+			e.stopPropagation();
+			e.preventDefault();
+
+			// Add Style
+			e.target.className = (e.type == "dragover" ? "hover" : "");
+			//e.target.classList.add('drag')
+		}
+
+		// file selection
+		function FileSelectHandler(e) {
+
+			// cancel event and hover styling
+			FileDragHover(e);
+
+			// fetch FileList object
+			var files = e.target.files || e.dataTransfer.files;
+
+			// process all File objects
+			for (var i = 0, f; f = files[i]; i++) {
+				ParseFile(f);
+			}
+		}
+
+		// File Save Click Elemnt Removal
+		function destroyClickedElement(event) {
+			document.body.removeChild(event.target);
+		}
+
+		// output file information
+		function ParseFile(file) {
+
+			Output(
+				"<p>File information: <strong>" + file.name +
+				"</strong> type: <strong>" + file.type +
+				"</strong> size: <strong>" + file.size +
+				"</strong> bytes</p>"
+			);
+
+			// File Reader Object
+			var fileReader = new FileReader();
+
+			// Closure to capture the file information.
+			fileReader.onload = (function(file) {
+			return function(fileLoadedEvent) {
+				// Pass Textt to Varable
+				var textFromFileLoaded = fileLoadedEvent.target.result;
+
+				// Regular Expression
+			    textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
+			    textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
+			    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "G4 P0.10  ; Dwell 0.10 seconds\nM3 S1  ; Laser OFF");  // Laser Off
+			// 		textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S255  ; Laser ON\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On
+				textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1  ; Laser On @ Power Level: $1\nG4 P0.25  ; Dwell 0.25 seconds");  // Laser On @ Power Level
+
+				// Debug Ouput
+ 				//console.log("File: " + file.name + "\n- - - - - - - - - - - -\n" + textFromFileLoaded + "\n=======================");
+				console.log("File: " + file.name);
+
+				// Trigger File Download
+				var textToSave = textFromFileLoaded;
+				var textToSaveAsBlob = new Blob([textFromFileLoaded], {type:"text/plain"});
+				var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+				var fileNameToSaveAs = "LASER_" + file.name;
+
+				var downloadLink = document.createElement("a");
+				downloadLink.download = fileNameToSaveAs;
+				downloadLink.innerHTML = "Download File";
+				downloadLink.href = textToSaveAsURL;
+				downloadLink.onclick = destroyClickedElement;
+				downloadLink.style.display = "none";
+				document.body.appendChild(downloadLink);
+
+				downloadLink.click();
+			};
+			})(file);
+
+			// Read File
+			fileReader.readAsText(file, "UTF-8");
+		}
+
+		// initialize
+		function Init() {
+
+			var fileselect = $id("fileselect"),
+				filedrag = $id("filedrag"),
+				submitbutton = $id("submitbutton");
+
+			// file select
+			fileselect.addEventListener("change", FileSelectHandler, false);
+
+			// is XHR2 available?
+			var xhr = new XMLHttpRequest();
+			if (xhr.upload) {
+
+				// file drop
+				filedrag.addEventListener("dragover", FileDragHover, false);
+				filedrag.addEventListener("dragleave", FileDragHover, false);
+				filedrag.addEventListener("drop", FileSelectHandler, false);
+				filedrag.style.display = "block";
+
+				// remove submit button
+				submitbutton.style.display = "none";
+			}
+		}
+
+		// call initialization file
+		if (window.File && window.FileList && window.FileReader) {
+			Init();
+		}
+	})();
+</script>
 </body>
-
-<script>
-
-	function destroyClickedElement(event)
-	{
-	    document.body.removeChild(event.target);
-	}
+</html>
 
 
-  function handleFileSelect(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
-
-    var files = evt.dataTransfer.files; // FileList object.
-
-    // files is a FileList of File objects. List some properties.
-    var output = [];
-    for (var i = 0, file; file = files[i]; i++) {
-		output.push('<li><strong>', escape(file.name), '</strong> (', file.type || 'n/a', ') - ',
-			file.size, ' bytes, last modified: ',
-			file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() : 'n/a',
-			'</li>');
 
 
+
+<!--
 		// File Reader Object
 		var fileReader = new FileReader();
 
@@ -111,20 +303,4 @@
 
 		// Read File
 		fileReader.readAsText(file, "UTF-8");
-
-    }
-    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
-  }
-
-  function handleDragOver(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
-    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-  }
-
-  // Setup the dnd listeners.
-  var dropZone = document.getElementById('drop_zone');
-  dropZone.addEventListener('dragover', handleDragOver, false);
-  dropZone.addEventListener('drop', handleFileSelect, false);
-</script>
-</html>
+-->

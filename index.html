@@ -7,6 +7,7 @@ Based on:
  - [instant.io](https://github.com/feross/instant.io)
  - [Loading, Editing, and Saving a Text File in HTML5 Using Javascript](https://thiscouldbebetter.wordpress.com/2012/12/18/loading-editing-and-saving-a-text-file-in-html5-using-javascrip/)
  Also Used:
+ - http://regexr.com/
  - https://css-tricks.com/using-svg/
  - http://petercollingridge.appspot.com/svg-optimiser/
  - https://www.base64encode.org/
@@ -133,7 +134,7 @@ Based on:
 						</li>
 						<li>
 							<label for="laser_power_variable_depth_high">G-code Depth [HiGH]:</label>
-							<input type="number" name="laser_power_variable_depth_high" value="100">mm
+							<input type="number" name="laser_power_variable_depth_high" value="1">mm
 						</li>
 						<li style="border-top:dashed 1px #666">
 							<label for="laser_power_variable_low">Laser Power/RPM [LOW]:</label>
@@ -299,10 +300,10 @@ Based on:
 				// Laser Off/On | Off/Range
 				if (document.getElementsByName('laser_power')[0].value == 'variable' ) {
 					// Varable Power
-					var laserPowerVariableHigh = document.getElementsByName('laser_power_variable_high')[0].value;
-					var laserPowerVariableLow  = document.getElementsByName('laser_power_variable_low')[0].value;
-					var laserPowerVariableDepthHigh = document.getElementsByName('laser_power_variable_depth_high')[0].value;
-					var laserPowerVariableDepthLow  = document.getElementsByName('laser_power_variable_depth_low')[0].value;
+					var laserPowerVariableHigh = Number(document.getElementsByName('laser_power_variable_high')[0].value);
+					var laserPowerVariableLow  = Number(document.getElementsByName('laser_power_variable_low')[0].value);
+					var laserPowerVariableDepthHigh = Number(document.getElementsByName('laser_power_variable_depth_high')[0].value);
+					var laserPowerVariableDepthLow  = Number(document.getElementsByName('laser_power_variable_depth_low')[0].value);
 
 					// Console Output
 					console.log("Laser Power/RPM [HIGH]:" + laserPowerVariableHigh);
@@ -311,15 +312,25 @@ Based on:
 					console.log("G-code Depth [LOW]:" + laserPowerVariableDepthLow);
 
 					// RegEx Mapping Grouped Values
-					function laserPowerVariableConvert(str, p1, offset, s) {
-						var laserPowerMapped = Math.round(map(p1, laserPowerVariableDepthLow, laserPowerVariableDepthHigh, laserPowerVariableLow, laserPowerVariableHigh));
+					function laserPowerVariableConvert(match, p1) {
+						var laserPowerMapped = Math.round(Math.min(Math.max(map(p1, laserPowerVariableDepthLow, laserPowerVariableDepthHigh, laserPowerVariableLow, laserPowerVariableHigh)), laserPowerVariableHigh), laserPowerVariableLow);
+
+						console.log(" - Mapped:[" + p1 + "] => [" + laserPowerMapped + "]");
+						//console.log(" -- Map:[" + map(Number(p1), laserPowerVariableDepthLow, laserPowerVariableDepthHigh, laserPowerVariableLow, laserPowerVariableHigh) + "]");
+						//console.log(" -- Map:[" + (Number(p1) - laserPowerVariableDepthLow) * (laserPowerVariableHigh - laserPowerVariableLow) / (laserPowerVariableDepthHigh - laserPowerVariableDepthLow) + laserPowerVariableLow + "]");
+						///console.log(" -- match:[" + match + "]");
+						//console.log(" -- laserPowerVariableHigh:[" + laserPowerVariableHigh + "]");
+						//console.log(" -- laserPowerVariableLow:[" + laserPowerVariableLow + "]");
+						//console.log(" -- laserPowerVariableDepthHigh:[" + laserPowerVariableDepthHigh + "]");
+						//console.log(" -- laserPowerVariableDepthLow:[" + laserPowerVariableDepthLow + "]");
+
 						return ("M3 S" + laserPowerMapped + "; Laser On @ Power Level: " + laserPowerMapped + laserOnDwellDurationGCode);
 					}
 
 					// Regex
 					console.log("Regex: Laser On @ Varible Power Level");
 					//textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1; Laser On @ Power Level: $1" + laserOnDwellDurationGCode);  // Laser On @ Power Level
-					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, laserPowerVariableConvert);  // Laser On @ Power Level w/ Mapped Values
+					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*\.?\d+)?\sF(\d*\.?\d+)/g, laserPowerVariableConvert);  // Laser On @ Power Level w/ Mapped Values
 				} else {
 					// Constant Power
 					var laserPowerConstant = document.getElementsByName('laser_power_constant')[0].value

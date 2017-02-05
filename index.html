@@ -10,6 +10,7 @@ Based on:
  - https://css-tricks.com/using-svg/
  - http://petercollingridge.appspot.com/svg-optimiser/
  - https://www.base64encode.org/
+ - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
 -->
 <html lang="en">
 <head>
@@ -25,7 +26,7 @@ Based on:
 			padding: 0;
 			height: 100%;
 			overflow: auto;
-			font-family: sans-serif
+			font-family: sans-serif;
 		}
 		#filedrag.hover::before {
 			content: '';
@@ -41,7 +42,7 @@ Based on:
 		main {
 			max-width: 800px;
 			margin: 0 auto;
-			padding: 20px 20px 0
+			padding: 20px 20px 0;
 		}
 		section {
 			margin: 50px 0
@@ -49,7 +50,7 @@ Based on:
 		.logo {
 			display: inline-block;
 			position: relative;
-			margin-bottom: 10px
+			margin-bottom: 10px;
 		}
 		.logo:after {
 			display: inline-block;
@@ -58,11 +59,11 @@ Based on:
 			right: -38px;
 			font-size: 11px;
 			color: #bbb;
-			content: 'BETA v1.4'
+			content: 'BETA v1.5';
 		}
 		.logo img {
 			margin: 0;
-			height: 120px
+			height: 120px;
 		}
 		.subtitle {
 			margin-top: 0;
@@ -77,22 +78,28 @@ Based on:
 			text-decoration: underline
 		}
 		label {
-			margin-right: 10px
+			margin-right: 10px;
 		}
 		input, button {
-			font-size: 16px
+			font-size: 16px;
+		}
+		#laser_power_constant_list, #laser_power_variable_list {
+			 display: none;
+		}
+		#laser_power_constant_list > li > input, #laser_power_variable_list > li > input, #laser_on_dwell_duration_list > li > input {
+			 width: 70px;
 		}
 		.log {
 			font-family: monospace;
-			font-size: 14px
+			font-size: 14px;
 		}
 		.log p {
-			margin: 0
+			margin: 0;
 		}
 		footer {
 			margin: 30px 0;
 			font-size: .8em;
-			color: #7d868c
+			color: #7d868c;
 		}
 	</style>
 </head>
@@ -104,20 +111,40 @@ Based on:
 		<section>
 			<h1>Configuration Options</h1>
 			<form method="" accept-charset="utf-8">
-				<ul style="list-style-type:disc">
+				<ul>
 					<li><label for="remove_m7-m8-m9">Remove: M7,M8,M9</label><input id="remove_m7-m8-m9" name="remove_m7-m8-m9" type="checkbox" checked /></li>
 					<li>
 						<label for="laser_power">Laser Power:</label>
-						<select name="laser_power">
+						<select name="laser_power" onchange="ChangeDropdowns(this.value);">
 							<option value="constant">Constant</option>
 							<option value="variable">Variable</option>
 						</select>
 					</li>
-					<li>
-						<label for="laser_power_constant">Laser Power(if constant):</label>
-						<input type="number" name="laser_power_constant" value="255">
-					</li>
-					<li>
+					<ul id="laser_power_constant_list">
+						<li>
+							<label for="laser_power_constant">Laser Power/RPM [CONSTANT]:</label>
+							<input type="number" name="laser_power_constant" value="255">
+						</li>
+					</ul>
+					<ul id="laser_power_variable_list" style="width: 330px">
+						<li>
+							<label for="laser_power_variable_high">Laser Power/RPM [HIGH]:</label>
+							<input type="number" name="laser_power_variable_high" value="255">
+						</li>
+						<li>
+							<label for="laser_power_variable_depth_high">G-code Depth [HiGH]:</label>
+							<input type="number" name="laser_power_variable_depth_high" value="100">mm
+						</li>
+						<li style="border-top:dashed 1px #666">
+							<label for="laser_power_variable_low">Laser Power/RPM [LOW]:</label>
+							<input type="number" name="laser_power_variable_low" value="0">
+						</li>
+						<li>
+							<label for="laser_power_variable_depth_low">G-code Depth [LOW]:</label>
+							<input type="number" name="laser_power_variable_depth_low" value="0">mm
+						</li>
+					</ul>
+					<li id="laser_on_dwell_duration_list">
 						<label for="laser_on_dwell_duration">POST Laser ON Dwell Duration(seconds):</label>
 						<input type="number" name="laser_on_dwell_duration" value="0.0">
 					</li>
@@ -125,7 +152,7 @@ Based on:
 						<label for="laser_off_dwell_duration">PRE Laser OFF Dwell Duration(seconds):</label>
 						<input type="number" name="laser_off_dwell_duration" value="0.0">
 					</li>
-					<li>
+					<li id="destination_filename_list">
 						<label for="destination_filename_prefex">Converted Filename Prefex:</label>
 						<input type="text" name="destination_filename_prefex" value="LASER_">
 					</li>
@@ -144,7 +171,32 @@ Based on:
 		</footer>
 	</main>
 <script>
+
+	// Laser Power List Changes
+	function ChangeDropdowns(value){
+	    if(value == "constant"){
+	        document.getElementById('laser_power_constant_list').style.display='block';
+	        document.getElementById('laser_power_variable_list').style.display='none';
+	    }else{
+	        document.getElementById('laser_power_constant_list').style.display='none';
+	        document.getElementById('laser_power_variable_list').style.display='block';
+	    }
+	}
+	// Run Once
+	ChangeDropdowns(document.getElementsByName('laser_power')[0].value);
+
+	// File / Drag Drop Operations
 	(function() {
+
+		// [Javascript - map a range of numbers to another range of numbers](http://stackoverflow.com/questions/10756313/javascript-jquery-map-a-range-of-numbers-to-another-range-of-numbers)
+/*
+		Number.prototype.map = function (value, in_min, in_max, out_min, out_max) {
+			return (this - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+		}
+*/
+		function map (value, in_min, in_max, out_min, out_max) {
+			return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+		}
 
 		// getElementById
 		function $id(id) {
@@ -246,9 +298,30 @@ Based on:
 
 				// Laser Off/On | Off/Range
 				if (document.getElementsByName('laser_power')[0].value == 'variable' ) {
+					// Varable Power
+					var laserPowerVariableHigh = document.getElementsByName('laser_power_variable_high')[0].value;
+					var laserPowerVariableLow  = document.getElementsByName('laser_power_variable_low')[0].value;
+					var laserPowerVariableDepthHigh = document.getElementsByName('laser_power_variable_depth_high')[0].value;
+					var laserPowerVariableDepthLow  = document.getElementsByName('laser_power_variable_depth_low')[0].value;
+
+					// Console Output
+					console.log("Laser Power/RPM [HIGH]:" + laserPowerVariableHigh);
+					console.log("Laser Power/RPM [LOW]:" + laserPowerVariableLow);
+					console.log("G-code Depth [HiGH]:" + laserPowerVariableDepthHigh);
+					console.log("G-code Depth [LOW]:" + laserPowerVariableDepthLow);
+
+					// RegEx Mapping Grouped Values
+					function laserPowerVariableConvert(str, p1, offset, s) {
+						var laserPowerMapped = Math.round(map(p1, laserPowerVariableDepthLow, laserPowerVariableDepthHigh, laserPowerVariableLow, laserPowerVariableHigh));
+						return ("M3 S" + laserPowerMapped + "; Laser On @ Power Level: " + laserPowerMapped + laserOnDwellDurationGCode);
+					}
+
+					// Regex
 					console.log("Regex: Laser On @ Varible Power Level");
-					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1; Laser On @ Power Level: $1" + laserOnDwellDurationGCode);  // Laser On @ Power Level
+					//textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1; Laser On @ Power Level: $1" + laserOnDwellDurationGCode);  // Laser On @ Power Level
+					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, laserPowerVariableConvert);  // Laser On @ Power Level w/ Mapped Values
 				} else {
+					// Constant Power
 					var laserPowerConstant = document.getElementsByName('laser_power_constant')[0].value
 					console.log("Regex: Laser On @ Constant Power Level: " + laserPowerConstant);
 					textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On

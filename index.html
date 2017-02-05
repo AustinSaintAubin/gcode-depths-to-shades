@@ -223,19 +223,16 @@ Based on:
 				var laserOffDwellDurationGCode = '';
 
 				// Dwell Condition
-				if (Number(document.getElementsByName('laserOnDwellDuration')[0].value) > 0) {
+				if (Number(document.getElementsByName('laser_on_dwell_duration')[0].value) > 0) {
 					// With Dwell
+					console.log("POST Laser ON Dwell Duration(seconds): " + laserOnDwellDuration);
 					laserOnDwellDurationGCode = "\nG4 P" + laserOnDwellDuration + "; Dwell " + laserOnDwellDuration + " seconds";
 				}
-				if (Number(document.getElementsByName('laserOffDwellDuration')[0].value) > 0) {
+				if (Number(document.getElementsByName('laser_off_dwell_duration')[0].value) > 0) {
 					// With Dwell
+					console.log("PRE Laser OFF Dwell Duration(seconds): " + laserOffDwellDuration);
 					laserOffDwellDurationGCode = "G4 P" + laserOffDwellDuration + "; Dwell " + laserOffDwellDuration + " seconds\n";
 				}
-
-
-				console.log("POST Laser ON Dwell Duration(seconds): " + laserOnDwellDuration);
-				console.log("PRE Laser OFF Dwell Duration(seconds): " + laserOffDwellDuration);
-
 
 				// Regular Expression
 				textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed

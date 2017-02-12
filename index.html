@@ -166,9 +166,9 @@ Based on:
 					<li>
 						<label for="tool_image2gcode_clean_newlines">Remove Unwanted Newlines</label>
 						<input id="tool_image2gcode_clean_newlines" name="tool_image2gcode_clean_newlines" type="checkbox" checked /></li>
-					<li id="tool_image2gcode_optimisation_iterations">
-						<label for="tool_image2gcode_optimisation_iterations">Optimisation Iterations:</label>
-						<input type="number" name="tool_image2gcode_optimisation_iterations" value="100">
+					<li id="tool_image2gcode_optimization_iterations">
+						<label for="tool_image2gcode_optimization_iterations">Optimization Iterations:</label>
+						<input type="number" name="tool_image2gcode_optimization_iterations" value="100">
 					</li>
 				</ul>
 				<ul id="general_configureation-options">
@@ -386,7 +386,7 @@ Based on:
 
 					// Optimize
 					console.log("[Running Optimization]");
-					for (i = 0; i < Number(document.getElementsByName('tool_image2gcode_optimisation_iterations')[0].value); i++) {
+					for (i = 0; i < Number(document.getElementsByName('tool_image2gcode_optimization_iterations')[0].value); i++) {
 					    console.log("Otimization Pass: #" + i);
 					    //textFromFileLoaded = textFromFileLoaded.replace(/(M03 S0|;\^MATCH)([\s\S]*?)((.*)\nM03 S[^0].*|M5|(G1 Y[0-9]*\.?[0-9]+))/g, "$1; #1\n$3; #3\n;^MATCH");  // Optimize
 					    textFromFileLoaded = textFromFileLoaded.replace(/(M03 S0|;\^MATCH)([\s\S]*?)((.*)\nM03 S[^0].*|M5|(G1 Y[0-9]*\.?[0-9]+))/g, "$1\n$3\n;^MATCH");  // Optimize

@@ -5,7 +5,7 @@ Convert 3-Axis CNC Router G-code generated from applications such as [Inventable
 [Launch!](http://htmlpreview.github.io/?https://raw.githubusercontent.com/AustinSaintAubin/gcode-depths-to-shades/master/index.html) *(Host on GitHub)*
 
 # Screenshot
-[![gcode-depths-to-shades](https://raw.githubusercontent.com/AustinSaintAubin/gcode-depths-to-shades/master/media/screenshot.png)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/AustinSaintAubin/gcode-depths-to-shades/master/index.html))
+[![gcode-depths-to-shades](https://raw.githubusercontent.com/AustinSaintAubin/gcode-depths-to-shades/master/media/screenshot.png)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/AustinSaintAubin/gcode-depths-to-shades/master/index.html)
 
 [GRBL](https://github.com/gnea/grbl) Spindle RPM Settings: (Used for Laser PWM)
 ```

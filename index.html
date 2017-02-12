@@ -377,10 +377,14 @@ Based on:
 				else {
 					console.log("3dpBurner-Image2Gcode Optimizer");
 
-					// Remove Unwanted Newlines
-					textFromFileLoaded = textFromFileLoaded.replace(/(^(?=\n)$|^\s*$|\r\n?|\n|\n\n)+/g, '\n');  // Remove Unwanted Newlines
+					if (document.getElementById('tool_image2gcode_clean_newlines').checked) {
+						// Remove Unwanted Newlines
+						console.log("Removing Unwanted Newlines");
+						textFromFileLoaded = textFromFileLoaded.replace(/(^(?=\n)$|^\s*$|\r\n?|\n|\n\n)+/g, '\n');  // Remove Unwanted Newlines
+					}
 
 					// Fix Uncomented Text
+					console.log("Fixing Uncomented Text");
 					textFromFileLoaded = textFromFileLoaded.replace(/^\(/g, ";(");  //Fix Uncomented Text
 
 

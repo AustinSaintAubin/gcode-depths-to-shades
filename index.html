@@ -165,7 +165,12 @@ Based on:
 				<ul id="tool_3dpburner-image2gcode_configureation-options">
 					<li>
 						<label for="tool_image2gcode_clean_newlines">Remove Unwanted Newlines</label>
-						<input id="tool_image2gcode_clean_newlines" name="tool_image2gcode_clean_newlines" type="checkbox" checked /></li>
+						<input id="tool_image2gcode_clean_newlines" name="tool_image2gcode_clean_newlines" type="checkbox" checked />
+					</li>
+					<li>
+						<label for="tool_image2gcode_laser_power_variable_depth_low">G-code Depth [LOW]:</label>
+						<input type="number" name="tool_image2gcode_laser_power_variable_depth_low" value="0">mm
+					</li>
 					<li id="tool_image2gcode_optimization_iterations">
 						<label for="tool_image2gcode_optimization_iterations">Optimization Iterations:</label>
 						<input type="number" name="tool_image2gcode_optimization_iterations" value="100">
@@ -387,13 +392,24 @@ Based on:
 					console.log("Fixing Uncomented Text");
 					textFromFileLoaded = textFromFileLoaded.replace(/^\(/g, ";(");  //Fix Uncomented Text
 
+					// Laser Power
+					var laserPowerVariableDepthLow  = Number(document.getElementsByName('tool_image2gcode_laser_power_variable_depth_low')[0].value);
+					console.log("G-code Depth [LOW]:" + laserPowerVariableDepthLow);
 
 					// Optimize
 					console.log("[Running Optimization]");
 					for (i = 0; i < Number(document.getElementsByName('tool_image2gcode_optimization_iterations')[0].value); i++) {
 					    console.log("Otimization Pass: #" + i);
+
 					    //textFromFileLoaded = textFromFileLoaded.replace(/(M03 S0|;\^MATCH)([\s\S]*?)((.*)\nM03 S[^0].*|M5|(G1 Y[0-9]*\.?[0-9]+))/g, "$1; #1\n$3; #3\n;^MATCH");  // Optimize
-					    textFromFileLoaded = textFromFileLoaded.replace(/(M03 S0|;\^MATCH)([\s\S]*?)((.*)\nM03 S[^0].*|M5|(G1 Y[0-9]*\.?[0-9]+))/g, "$1\n$3\n;^MATCH");  // Optimize
+					    //textFromFileLoaded = textFromFileLoaded.replace(/(M03 S38|;\^MATCH)([\s\S]*?)((.*)\nM03 S[^0].*|M5|(G1 Y[0-9]*\.?[0-9]+))/g, "$1\n$3\n;^MATCH");  // Optimize
+
+						// RegEx
+					    str1 = '(M03 S' + laserPowerVariableDepthLow + '|;\\^MATCH)([\\s\\S]*?)((.*)\\nM03 S[^0].*|M5|(G1 Y[0-9]*\\.?[0-9]+))';
+						var reg = new RegExp(str1, "g");
+					    //console.log("str1:" + str1);
+					    //console.log("RegEx:" + reg);
+					    textFromFileLoaded = textFromFileLoaded.replace(reg, "$1\n$3\n;^MATCH");  // Optimize
 					}
 
 					// Run Cleanup

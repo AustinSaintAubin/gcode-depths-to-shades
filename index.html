@@ -121,7 +121,11 @@ Based on:
 						<option value="tool_3dpburner-image2gcode">3dpBurner-Image2Gcode Optimizer</option>
 					</select>
 				<ul id="tool_gcode-depths-to-shades_configureation-options">
-					<li><label for="remove_m7-m8-m9">Remove: M7,M8,M9</label><input id="remove_m7-m8-m9" name="remove_m7-m8-m9" type="checkbox" checked /></li>
+					<li><label for="grbl_laser_mode">Enable: <a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Laser-Mode">GRBL Laser Mode</a></label><input id="grbl_laser_mode" name="grbl_laser_mode" type="checkbox" checked /></li>
+					<li><label for="convert_m3-m4">Convert: M3 to M4</label><input id="convert_m3-m4" name="convert_m3-m4" type="checkbox" checked /></li>
+					<li><label for="remove_m7">Remove: M7</label><input id="remove_m7" name="remove_m7" type="checkbox" unchecked /></li>
+					<li><label for="remove_m8">Remove: M8</label><input id="remove_m8" name="remove_m8" type="checkbox" checked /></li>
+					<li><label for="sleep_at_end"><a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Commands#slp---enable-sleep-mode">Sleep</a> Once Job Finished</label><input id="sleep_at_end" name="sleep_at_end" type="checkbox" unchecked /></li>
 					<li>
 						<label for="laser_power">Laser Power:</label>
 						<select name="laser_power" onchange="ChangeDropdowns(this.value);">
@@ -330,10 +334,17 @@ Based on:
 					textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
 				    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, laserOffDwellDurationGCode + "M3 S1; Laser OFF");  // Laser Off
 
-					// Remove Watercooling Refences
-					if (document.getElementById('remove_m7-m8-m9').checked) {
-						console.log("Regex: Remove Watercooling Refences");
-						textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
+					// Remove M7 Refences
+					if (document.getElementById('remove_m7').checked) {
+						console.log("Regex: Remove M7 Refences");
+						//textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
+						textFromFileLoaded = textFromFileLoaded.replace(/(M7)\n/g, '');  // Remove Watercooling Refences
+					}
+
+					// Remove M8 Refences
+					if (document.getElementById('remove_m8').checked) {
+						console.log("Regex: Remove M8 Refences");
+						textFromFileLoaded = textFromFileLoaded.replace(/(M8)\n/g, '');  // Remove Watercooling Refences
 					}
 
 					// Laser Off/On | Off/Range
@@ -376,6 +387,25 @@ Based on:
 						console.log("Regex: Laser On @ Constant Power Level: " + laserPowerConstant);
 						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
 					}
+
+					// Convert M3 to M4
+					if (document.getElementById('convert_m3-m4').checked) {
+						console.log("Regex: Convert M3 to M4");
+						textFromFileLoaded = textFromFileLoaded.replace(/M3/g, 'M4');
+					}
+
+					// GRBL Laser Mode
+					if (document.getElementById('grbl_laser_mode').checked) {
+						console.log("Regex: ENABLING GRBL Laser Mode");
+						textFromFileLoaded = textFromFileLoaded.replace(/(^.*)\n/g, '\$32=1 ;[ENABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n$1\n');
+						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/g, '$1\n\$32=0 ;[DISABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n');
+					}
+
+					// Sleep
+					if (document.getElementById('sleep_at_end').checked) {
+						console.log("Regex: Sleeping Once Job Compleated");
+						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/g, '$1\n\$SLP ;Sleep\n');
+					}
 				}
 
 				// RUN: 3dpBurner-Image2Gcode Optimizer
@@ -415,6 +445,12 @@ Based on:
 					// Run Cleanup
 					console.log("Running Cleanup");
 					textFromFileLoaded = textFromFileLoaded.replace(/;\^MATCH.*\n/g, '');  // Remove MATCH Refence,
+
+/*
+					// Regex
+					console.log("Regex: Feed Rate Fix");
+					textFromFileLoaded = textFromFileLoaded.replace(/(G1 (X|Y)(\d*\.?\d+)?)\s(G1(\sY\d*\.?\d+))?/g, "$1$5 F3000");  // Laser On @ Power Level w/ Mapped Values
+*/
 				}
 
 				// Trigger File Download

@@ -123,7 +123,6 @@ Based on:
 				<ul id="tool_gcode-depths-to-shades_configureation-options">
 					<li><label for="grbl_laser_mode">Enable: <a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Laser-Mode">GRBL Laser Mode</a></label><input id="grbl_laser_mode" name="grbl_laser_mode" type="checkbox" checked /></li>
 					<li><label for="convert_m3-m4">Convert: M3 to M4</label><input id="convert_m3-m4" name="convert_m3-m4" type="checkbox" checked /></li>
-					<li><label for="add_dwell_m3-m4">Add Dwell/Pause before first M3 or M4</label><input id="add_dwell_m3-m4" name="add_dwell_m3-m4" type="checkbox" checked /></li>
 					<li><label for="remove_m7">Remove: M7</label><input id="remove_m7" name="remove_m7" type="checkbox" checked /></li>
 					<li><label for="remove_m8">Remove: M8</label><input id="remove_m8" name="remove_m8" type="checkbox" unchecked /></li>
 					<li><label for="remove_m9">Remove: M9</label><input id="remove_m9" name="remove_m9" type="checkbox" unchecked /></li>
@@ -159,6 +158,10 @@ Based on:
 							<input type="number" name="laser_power_variable_depth_low" value="0">mm
 						</li>
 					</ul>
+					<li id="laser_arm_dwell_duration_list">
+						<label for="laser_arm_dwell_duration">Laser ARM Dwell Duration(seconds):</label>
+						<input type="number" name="laser_arm_dwell_duration" value="4.0">
+					</li>
 					<li id="laser_on_dwell_duration_list">
 						<label for="laser_on_dwell_duration">POST Laser ON Dwell Duration(seconds):</label>
 						<input type="number" name="laser_on_dwell_duration" value="0.0">
@@ -315,18 +318,26 @@ Based on:
 					console.log("G-Code Depth to Shades Converter");
 
 					// Dwell Values
+					var laserArmDwellDuration  = document.getElementsByName('laser_arm_dwell_duration')[0].value;
+					var laserArmDwellDurationGCode = '';
 					var laserOnDwellDuration  = document.getElementsByName('laser_on_dwell_duration')[0].value;
 					var laserOnDwellDurationGCode = '';
 					var laserOffDwellDuration = document.getElementsByName('laser_off_dwell_duration')[0].value;
 					var laserOffDwellDurationGCode = '';
 
 					// Dwell Condition
-					if (Number(document.getElementsByName('laser_on_dwell_duration')[0].value) > 0) {
+					if (laserArmDwellDuration > 0) {
+						// With Dwell, Add Dwell/Pause before first M3 or M4
+						console.log("Add Dwell/Pause before first M3 or M4: Dwell Duration(seconds): " + laserArmDwellDuration);
+						laserArmDwellDurationGCode = "G4 P" + laserArmDwellDuration + "; Dwell " + laserArmDwellDuration + " seconds\nM400";
+						textFromFileLoaded = textFromFileLoaded.replace(/(M3|M4)+/i, laserArmDwellDurationGCode + '\n$1');
+					}
+					if (laserOnDwellDuration > 0) {
 						// With Dwell
 						console.log("POST Laser ON Dwell Duration(seconds): " + laserOnDwellDuration);
 						laserOnDwellDurationGCode = "\nG4 P" + laserOnDwellDuration + "; Dwell " + laserOnDwellDuration + " seconds";
 					}
-					if (Number(document.getElementsByName('laser_off_dwell_duration')[0].value) > 0) {
+					if (laserOffDwellDuration > 0) {
 						// With Dwell
 						console.log("PRE Laser OFF Dwell Duration(seconds): " + laserOffDwellDuration);
 						laserOffDwellDurationGCode = "G4 P" + laserOffDwellDuration + "; Dwell " + laserOffDwellDuration + " seconds\n";
@@ -348,7 +359,7 @@ Based on:
 						console.log("Regex: Remove M8 Refences");
 						textFromFileLoaded = textFromFileLoaded.replace(/(M8)\n/ig, '');  // Remove Watercooling Refences
 					}
-					
+
 					// Remove M9 Refences
 					if (document.getElementById('remove_m9').checked) {
 						console.log("Regex: Remove M9 Refences");
@@ -400,12 +411,6 @@ Based on:
 					if (document.getElementById('convert_m3-m4').checked) {
 						console.log("Regex: Convert M3 to M4");
 						textFromFileLoaded = textFromFileLoaded.replace(/M3/ig, 'M4');
-					}
-					
-					// Add Dwell/Pause before first M3 or M4
-					if (document.getElementById('add_dwell_m3-m4').checked) {
-						console.log("Regex: Add Dwell/Pause before first M3 or M4");
-						textFromFileLoaded = textFromFileLoaded.replace(/(M3|M4)+/i, 'G4 P4\nM400\n$1');
 					}
 
 					// GRBL Laser Mode

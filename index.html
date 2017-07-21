@@ -411,14 +411,14 @@ Based on:
 					// GRBL Laser Mode
 					if (document.getElementById('grbl_laser_mode').checked) {
 						console.log("Regex: ENABLING GRBL Laser Mode");
-						textFromFileLoaded = textFromFileLoaded.replace(/(^.*)\n/ig, '\$32=1 ;[ENABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n$1\n');
-						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/ig, '$1\n\$32=0 ;[DISABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n');
+						textFromFileLoaded = textFromFileLoaded.replace(/(^.*)\n/ig, '\$32=1 ;[ENABLE] GRBL Laser Mode\nM400\nG4 P0.01 ;Dwell, wait for sync\n$1\n');
+						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/ig, '$1\n\$32=0 ;[DISABLE] GRBL Laser Mode\nM400\nG4 P0.01 ;Dwell, wait for sync\n');
 					}
 
 					// Sleep
 					if (document.getElementById('sleep_at_end').checked) {
 						console.log("Regex: Sleeping Once Job Compleated");
-						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/ig, '$1\n\$SLP ;Sleep\n');
+						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/ig, '$1\nM400\n\$SLP ;Sleep\n');
 					}
 				}
 

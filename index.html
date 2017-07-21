@@ -123,6 +123,7 @@ Based on:
 				<ul id="tool_gcode-depths-to-shades_configureation-options">
 					<li><label for="grbl_laser_mode">Enable: <a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Laser-Mode">GRBL Laser Mode</a></label><input id="grbl_laser_mode" name="grbl_laser_mode" type="checkbox" checked /></li>
 					<li><label for="convert_m3-m4">Convert: M3 to M4</label><input id="convert_m3-m4" name="convert_m3-m4" type="checkbox" checked /></li>
+					<li><label for="add_dwell_m3-m4">A</label><input id="add_dwell_m3-m4" name="add_dwell_m3-m4" type="checkbox" checked /></li>
 					<li><label for="remove_m7">Remove: M7</label><input id="remove_m7" name="remove_m7" type="checkbox" checked /></li>
 					<li><label for="remove_m8">Remove: M8</label><input id="remove_m8" name="remove_m8" type="checkbox" unchecked /></li>
 					<li><label for="remove_m9">Remove: M9</label><input id="remove_m9" name="remove_m9" type="checkbox" unchecked /></li>
@@ -399,6 +400,12 @@ Based on:
 					if (document.getElementById('convert_m3-m4').checked) {
 						console.log("Regex: Convert M3 to M4");
 						textFromFileLoaded = textFromFileLoaded.replace(/M3/g, 'M4');
+					}
+					
+					// Add Dwell/Pause before first M3 or M4
+					if (document.getElementById('add_dwell_m3-m4').checked) {
+						console.log("Regex: Add Dwell/Pause before first M3 or M4");
+						textFromFileLoaded = textFromFileLoaded.replace(/(M3|M4)+/i, 'G4 P4\nM400\n$1');
 					}
 
 					// GRBL Laser Mode

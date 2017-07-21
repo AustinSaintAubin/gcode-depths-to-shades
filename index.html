@@ -351,7 +351,7 @@ Based on:
 					// Remove M9 Refences
 					if (document.getElementById('remove_m9').checked) {
 						console.log("Regex: Remove M9 Refences");
-						textFromFileLoaded = textFromFileLoaded.replace(/(M9)\n/g, '');  // Remove Watercooling Refences
+						textFromFileLoaded = textFromFileLoaded.replace(/(M9)\n?/g, '');  // Remove Watercooling Refences
 					}
 
 					// Laser Off/On | Off/Range

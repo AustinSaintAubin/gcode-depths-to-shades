@@ -123,7 +123,7 @@ Based on:
 				<ul id="tool_gcode-depths-to-shades_configureation-options">
 					<li><label for="grbl_laser_mode">Enable: <a href="https://github.com/gnea/grbl/wiki/Grbl-v1.1-Laser-Mode">GRBL Laser Mode</a></label><input id="grbl_laser_mode" name="grbl_laser_mode" type="checkbox" checked /></li>
 					<li><label for="convert_m3-m4">Convert: M3 to M4</label><input id="convert_m3-m4" name="convert_m3-m4" type="checkbox" checked /></li>
-					<li><label for="add_dwell_m3-m4">A</label><input id="add_dwell_m3-m4" name="add_dwell_m3-m4" type="checkbox" checked /></li>
+					<li><label for="add_dwell_m3-m4">Add Dwell/Pause before first M3 or M4</label><input id="add_dwell_m3-m4" name="add_dwell_m3-m4" type="checkbox" checked /></li>
 					<li><label for="remove_m7">Remove: M7</label><input id="remove_m7" name="remove_m7" type="checkbox" checked /></li>
 					<li><label for="remove_m8">Remove: M8</label><input id="remove_m8" name="remove_m8" type="checkbox" unchecked /></li>
 					<li><label for="remove_m9">Remove: M9</label><input id="remove_m9" name="remove_m9" type="checkbox" unchecked /></li>
@@ -333,26 +333,26 @@ Based on:
 					}
 
 					// Regular Expression
-					textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/g, "M3 S1");   // Alter Spindle Speed
-				    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, laserOffDwellDurationGCode + "M3 S1; Laser OFF");  // Laser Off
+					textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/ig, "M3 S1");   // Alter Spindle Speed
+				    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, laserOffDwellDurationGCode + "M3 S1; Laser OFF");  // Laser Off
 
 					// Remove M7 Refences
 					if (document.getElementById('remove_m7').checked) {
 						console.log("Regex: Remove M7 Refences");
 						//textFromFileLoaded = textFromFileLoaded.replace(/(M7|M8|M9)\n/g, '');  // Remove Watercooling Refences
-						textFromFileLoaded = textFromFileLoaded.replace(/(M7)\n/g, '');  // Remove Watercooling Refences
+						textFromFileLoaded = textFromFileLoaded.replace(/(M7)\n/ig, '');  // Remove Watercooling Refences
 					}
 
 					// Remove M8 Refences
 					if (document.getElementById('remove_m8').checked) {
 						console.log("Regex: Remove M8 Refences");
-						textFromFileLoaded = textFromFileLoaded.replace(/(M8)\n/g, '');  // Remove Watercooling Refences
+						textFromFileLoaded = textFromFileLoaded.replace(/(M8)\n/ig, '');  // Remove Watercooling Refences
 					}
 					
 					// Remove M9 Refences
 					if (document.getElementById('remove_m9').checked) {
 						console.log("Regex: Remove M9 Refences");
-						textFromFileLoaded = textFromFileLoaded.replace(/(M9)\n?/g, '');  // Remove Watercooling Refences
+						textFromFileLoaded = textFromFileLoaded.replace(/(M9)\n?/ig, '');  // Remove Watercooling Refences
 					}
 
 					// Laser Off/On | Off/Range
@@ -388,18 +388,18 @@ Based on:
 						// Regex
 						console.log("Regex: Laser On @ Varible Power Level");
 						//textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1; Laser On @ Power Level: $1" + laserOnDwellDurationGCode);  // Laser On @ Power Level
-						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*\.?\d+)?\sF(\d*\.?\d+)/g, laserPowerVariableConvert);  // Laser On @ Power Level w/ Mapped Values
+						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*\.?\d+)?\sF(\d*\.?\d+)/ig, laserPowerVariableConvert);  // Laser On @ Power Level w/ Mapped Values
 					} else {
 						// Constant Power
 						var laserPowerConstant = document.getElementsByName('laser_power_constant')[0].value
 						console.log("Regex: Laser On @ Constant Power Level: " + laserPowerConstant);
-						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/g, "M3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
+						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, "M3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
 					}
 
 					// Convert M3 to M4
 					if (document.getElementById('convert_m3-m4').checked) {
 						console.log("Regex: Convert M3 to M4");
-						textFromFileLoaded = textFromFileLoaded.replace(/M3/g, 'M4');
+						textFromFileLoaded = textFromFileLoaded.replace(/M3/ig, 'M4');
 					}
 					
 					// Add Dwell/Pause before first M3 or M4
@@ -411,14 +411,14 @@ Based on:
 					// GRBL Laser Mode
 					if (document.getElementById('grbl_laser_mode').checked) {
 						console.log("Regex: ENABLING GRBL Laser Mode");
-						textFromFileLoaded = textFromFileLoaded.replace(/(^.*)\n/g, '\$32=1 ;[ENABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n$1\n');
-						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/g, '$1\n\$32=0 ;[DISABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n');
+						textFromFileLoaded = textFromFileLoaded.replace(/(^.*)\n/ig, '\$32=1 ;[ENABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n$1\n');
+						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/ig, '$1\n\$32=0 ;[DISABLE] GRBL Laser Mode\nG4 P0.01 ;Dwell, wait for sync\n');
 					}
 
 					// Sleep
 					if (document.getElementById('sleep_at_end').checked) {
 						console.log("Regex: Sleeping Once Job Compleated");
-						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/g, '$1\n\$SLP ;Sleep\n');
+						textFromFileLoaded = textFromFileLoaded.replace(/(.+)$/ig, '$1\n\$SLP ;Sleep\n');
 					}
 				}
 
@@ -429,12 +429,12 @@ Based on:
 					if (document.getElementById('tool_image2gcode_clean_newlines').checked) {
 						// Remove Unwanted Newlines
 						console.log("Removing Unwanted Newlines");
-						textFromFileLoaded = textFromFileLoaded.replace(/(^(?=\n)$|^\s*$|\r\n?|\n|\n\n)+/g, '\n');  // Remove Unwanted Newlines
+						textFromFileLoaded = textFromFileLoaded.replace(/(^(?=\n)$|^\s*$|\r\n?|\n|\n\n)+/ig, '\n');  // Remove Unwanted Newlines
 					}
 
 					// Fix Uncomented Text
 					console.log("Fixing Uncomented Text");
-					textFromFileLoaded = textFromFileLoaded.replace(/^\(/g, ";(");  //Fix Uncomented Text
+					textFromFileLoaded = textFromFileLoaded.replace(/^\(/ig, ";(");  //Fix Uncomented Text
 
 					// Laser Power
 					var laserPowerVariableDepthLow  = Number(document.getElementsByName('tool_image2gcode_laser_power_variable_depth_low')[0].value);
@@ -458,7 +458,7 @@ Based on:
 
 					// Run Cleanup
 					console.log("Running Cleanup");
-					textFromFileLoaded = textFromFileLoaded.replace(/;\^MATCH.*\n/g, '');  // Remove MATCH Refence,
+					textFromFileLoaded = textFromFileLoaded.replace(/;\^MATCH.*\n/ig, '');  // Remove MATCH Refence,
 
 /*
 					// Regex

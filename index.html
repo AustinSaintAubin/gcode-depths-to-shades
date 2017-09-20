@@ -188,7 +188,7 @@ Based on:
 				<ul id="general_configureation-options">
 					<li id="destination_filename_list">
 						<label for="destination_filename_prefex">Destination Filename Prefex:</label>
-						<input type="text" name="destination_filename_prefex" value="LASER_">
+						<input type="text" name="destination_filename_prefex" value="">
 					</li>
 				</ul>
 			</form>
@@ -217,11 +217,11 @@ Based on:
 	    }else if(value == "tool_gcode-depths-to-shades"){
 	        document.getElementById('tool_gcode-depths-to-shades_configureation-options').style.display='block';
 	        document.getElementById('tool_3dpburner-image2gcode_configureation-options').style.display='none';
-	        document.getElementsByName("destination_filename_prefex")[0].value = "D2S_LASER_";
+	        document.getElementsByName("destination_filename_prefex")[0].value = "D2S-LSR_";
 	    }else if(value == "tool_3dpburner-image2gcode"){
 	        document.getElementById('tool_gcode-depths-to-shades_configureation-options').style.display='none';
 	        document.getElementById('tool_3dpburner-image2gcode_configureation-options').style.display='block';
-	        document.getElementsByName("destination_filename_prefex")[0].value = "I2G_LASER_";
+	        document.getElementsByName("destination_filename_prefex")[0].value = "I2G-LSR_";
 	    } else {
 		    console.log("ERROR: ChangeDropdowns: " + value);
 	    }

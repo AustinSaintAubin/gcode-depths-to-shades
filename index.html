@@ -90,7 +90,7 @@ Based on:
 			 display: none;
 		}
 		#laser_power_constant_list > li > input, #laser_power_variable_list > li > input, #laser_on_dwell_duration_list > li > input {
-			 width: 70px;
+			 min-width: 70px;
 		}
 		.log {
 			font-family: monospace;
@@ -138,6 +138,12 @@ Based on:
 						<li>
 							<label for="laser_power_constant">Laser Power/RPM [CONSTANT]:</label>
 							<input type="number" name="laser_power_constant" value="255">
+						</li>
+						<li>
+							<label for="laser_power_constant_move-z">Passthrough Z-Movements</label>
+							<input id="laser_power_constant_move-z" name="laser_power_constant_move-z" onchange="ChangeCheckBox(this.name, this.checked);" type="checkbox" checked />
+							<label for="laser_power_constant_move-z_laser-off"> w/ laser off</label><input id="laser_power_constant_move-z_laser-off" name="laser_power_constant_move-z_laser-off" type="checkbox" checked />
+							<div><small>Enabling "Passthrough Z-Movements" will allow the gcode Z-Axis movements to be used.<br/>You can also enable "w/ laser off" to disable the laser before a Z-Axis move, laser will turn on again after Z-Axis move completes.</small></div>
 						</li>
 					</ul>
 					<ul id="laser_power_variable_list" style="width: 330px">
@@ -207,7 +213,7 @@ Based on:
 <script>
 
 	// Laser Power List Changes
-	function ChangeDropdowns(value){
+	function ChangeDropdowns(value) {
 	    if(value == "constant"){
 	        document.getElementById('laser_power_constant_list').style.display='block';
 	        document.getElementById('laser_power_variable_list').style.display='none';
@@ -226,6 +232,18 @@ Based on:
 		    console.log("ERROR: ChangeDropdowns: " + value);
 	    }
 	}
+	function ChangeCheckBox(name, checked) {
+		 console.log("ChangeCheckBox: " + name + " | " + checked);
+
+		if(name == "laser_power_constant_move-z"){
+			if (checked == true) {
+				document.getElementById('laser_power_constant_move-z_laser-off').disabled = false;
+			} else {
+		        document.getElementById('laser_power_constant_move-z_laser-off').disabled = true;
+			}
+	    }
+	}
+
 	// Run Once
 	ChangeDropdowns(document.getElementsByName('tool_engine')[0].value);
 	ChangeDropdowns(document.getElementsByName('laser_power')[0].value);
@@ -343,10 +361,6 @@ Based on:
 						laserOffDwellDurationGCode = "G4 P" + laserOffDwellDuration + "; Dwell " + laserOffDwellDuration + " seconds\n";
 					}
 
-					// Regular Expression
-					textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/ig, "M3 S1");   // Alter Spindle Speed
-				    textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, laserOffDwellDurationGCode + "M3 S1; Laser OFF");  // Laser Off
-
 					// Remove M7 Refences
 					if (document.getElementById('remove_m7').checked) {
 						console.log("Regex: Remove M7 Refences");
@@ -367,7 +381,11 @@ Based on:
 					}
 
 					// Laser Off/On | Off/Range
-					if (document.getElementsByName('laser_power')[0].value == 'variable' ) {
+					if (document.getElementsByName('laser_power')[0].value == 'variable') {
+						// Regular Expression
+						textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/ig, "M3 S1");   // Alter Spindle Speed
+						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, laserOffDwellDurationGCode + "M3 S1; Laser OFF");  // Laser Off
+
 						// Varable Power
 						var laserPowerVariableHigh = Number(document.getElementsByName('laser_power_variable_high')[0].value);
 						var laserPowerVariableLow  = Number(document.getElementsByName('laser_power_variable_low')[0].value);
@@ -400,11 +418,23 @@ Based on:
 						console.log("Regex: Laser On @ Varible Power Level");
 						//textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*)(\.\d+)?\sF\d*(\.\d+)?/g, "M3 S$1; Laser On @ Power Level: $1" + laserOnDwellDurationGCode);  // Laser On @ Power Level
 						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-(\d*\.?\d+)?\sF(\d*\.?\d+)/ig, laserPowerVariableConvert);  // Laser On @ Power Level w/ Mapped Values
-					} else {
+					} else {  // Laser Power Constant
 						// Constant Power
 						var laserPowerConstant = document.getElementsByName('laser_power_constant')[0].value
 						console.log("Regex: Laser On @ Constant Power Level: " + laserPowerConstant);
-						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, "M3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
+
+						// Passthrough Z-Axis Movments
+						if (document.getElementById('laser_power_constant_move-z').checked) {
+							console.log("Regex: Passthrough Z-Axis Movments, Z-Axis will move.");
+							if (document.getElementById('laser_power_constant_move-z_laser-off').checked) {
+								console.log("Regex: Passthrough Z-Axis Movments & Power OFF Laser Before Z-Move, Z-Axis will move, with laser off, then turn laser on again.");
+								textFromFileLoaded = textFromFileLoaded.replace(/(.*(Z-?[0-9]*\.?[0-9]+).*)\n/ig, "M3 S0; Laser Off\n$1\nM3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
+							} else {
+								textFromFileLoaded = textFromFileLoaded.replace(/(.*(Z-?[0-9]*\.?[0-9]+).*)\n/ig, "$1\nM3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
+							}
+						} else {
+							textFromFileLoaded = textFromFileLoaded.replace(/G1 Z-[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, "M3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
+						}
 					}
 
 					// Convert M3 to M4

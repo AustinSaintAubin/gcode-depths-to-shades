@@ -90,7 +90,7 @@ Based on:
 			 display: none;
 		}
 		#laser_power_constant_list > li > input, #laser_power_variable_list > li > input, #laser_on_dwell_duration_list > li > input {
-			 min-width: 70px;
+			 max-width: 70px;
 		}
 		.log {
 			font-family: monospace;
@@ -140,6 +140,10 @@ Based on:
 							<input type="number" name="laser_power_constant" value="255">
 						</li>
 						<li>
+							<label for="laser_off_power">Laser Power/RPM [OFF]:</label>
+							<input type="number" name="laser_off_power" value="1">
+						</li>
+						<li>
 							<label for="laser_power_constant_move-z">Passthrough Z-Movements</label>
 							<input id="laser_power_constant_move-z" name="laser_power_constant_move-z" onchange="ChangeCheckBox(this.name, this.checked);" type="checkbox" checked />
 							<label for="laser_power_constant_move-z_laser-off"> w/ laser off</label><input id="laser_power_constant_move-z_laser-off" name="laser_power_constant_move-z_laser-off" type="checkbox" checked />
@@ -162,6 +166,10 @@ Based on:
 						<li>
 							<label for="laser_power_variable_depth_low">G-code Depth [LOW]:</label>
 							<input type="number" name="laser_power_variable_depth_low" value="0">mm
+						</li>
+						<li>
+							<label for="laser_off_power">Laser Power/RPM [OFF]:</label>
+							<input type="number" name="laser_off_power" value="1">
 						</li>
 					</ul>
 					<li id="laser_arm_dwell_duration_list">
@@ -335,6 +343,9 @@ Based on:
 				if ("tool_gcode-depths-to-shades" == document.getElementsByName('tool_engine')[0].value) {
 					console.log("G-Code Depth to Shades Converter");
 
+					// Laser Power Off Value
+					var laserPowerOff = document.getElementsByName('laser_off_power')[0].value
+
 					// Dwell Values
 					var laserArmDwellDuration  = document.getElementsByName('laser_arm_dwell_duration')[0].value;
 					var laserArmDwellDurationGCode = '';
@@ -361,6 +372,9 @@ Based on:
 						laserOffDwellDurationGCode = "G4 P" + laserOffDwellDuration + "; Dwell " + laserOffDwellDuration + " seconds\n";
 					}
 
+					// Regular Expression, Disable Unknow Laser Startups
+					textFromFileLoaded = textFromFileLoaded.replace(/(M3|M4) S[0-9]*/ig, "$1 S1");   // Alter Spindle Speed
+
 					// Remove M7 Refences
 					if (document.getElementById('remove_m7').checked) {
 						console.log("Regex: Remove M7 Refences");
@@ -382,9 +396,8 @@ Based on:
 
 					// Laser Off/On | Off/Range
 					if (document.getElementsByName('laser_power')[0].value == 'variable') {
-						// Regular Expression
-						textFromFileLoaded = textFromFileLoaded.replace(/M3 S[0-9]*/ig, "M3 S1");   // Alter Spindle Speed
-						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, laserOffDwellDurationGCode + "M3 S1; Laser OFF");  // Laser Off
+						// Regular Expression, Remove Z-Axis Moves
+						textFromFileLoaded = textFromFileLoaded.replace(/G1 Z[0-9]*\.?[0-9]+ F[0-9]*\.?[0-9]+/ig, laserOffDwellDurationGCode + "M3 S" + laserPowerOff + "; Laser OFF");  // Laser Off
 
 						// Varable Power
 						var laserPowerVariableHigh = Number(document.getElementsByName('laser_power_variable_high')[0].value);
@@ -428,7 +441,7 @@ Based on:
 							console.log("Regex: Passthrough Z-Axis Movments, Z-Axis will move.");
 							if (document.getElementById('laser_power_constant_move-z_laser-off').checked) {
 								console.log("Regex: Passthrough Z-Axis Movments & Power OFF Laser Before Z-Move, Z-Axis will move, with laser off, then turn laser on again.");
-								textFromFileLoaded = textFromFileLoaded.replace(/(.*(Z-?[0-9]*\.?[0-9]+).*)\n/ig, "M3 S0; Laser Off\n$1\nM3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
+								textFromFileLoaded = textFromFileLoaded.replace(/(.*(Z-?[0-9]*\.?[0-9]+).*)\n/ig, "M3 S" + laserPowerOff + "; Laser Off\n$1\nM3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
 							} else {
 								textFromFileLoaded = textFromFileLoaded.replace(/(.*(Z-?[0-9]*\.?[0-9]+).*)\n/ig, "$1\nM3 S" + laserPowerConstant + "; Laser ON" + laserOnDwellDurationGCode);  // Laser On
 							}

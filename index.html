@@ -450,10 +450,13 @@ Based on:
 						}
 					}
 
-					// Convert M3 to M4
+					// Convert M3 to M4, or M4 to M3
 					if (document.getElementById('convert_m3-m4').checked) {
 						console.log("Regex: Convert M3 to M4");
 						textFromFileLoaded = textFromFileLoaded.replace(/M3/ig, 'M4');
+					}	else {
+						console.log("Regex: Convert M4 to M3");
+						textFromFileLoaded = textFromFileLoaded.replace(/M4/ig, 'M3');
 					}
 
 					// GRBL Laser Mode
